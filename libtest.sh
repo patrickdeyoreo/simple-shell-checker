@@ -73,7 +73,7 @@ test::read()
 test::exec()
 {
     for SHELL in /bin/sh "${SHELL}"; do
-        { "${check}" & wait "$!"; echo "$?"; } \
+        { "$1" "${SHELL}" & wait "$!"; echo "$?"; } \
             1> >(sed 's:/bin/sh:'"${SHELL//&/\\&}"':g' >"$2-${SHELL##*/}-stdout") \
             2> >(sed 's:/bin/sh:'"${SHELL//&/\\&}"':g' >"$2-${SHELL##*/}-stderr")
     done </dev/null
