@@ -20,13 +20,13 @@ test::all()
     for task in "$1"/*; do
         msg::std "> Task ${task##*/}:"
         for check in "${task}"/*; do
-            msg::nonl "    # ${check##*/}"
+            msg::nonl "    # ${check##*/}: "
             if [[ -x ${check} ]]; then
                 test::exec "${check}" "${task##*/}-${check##*/}"
             else
                 test::read "${check}" "${task##*/}-${check##*/}"
             fi
-            if diff -q "${task##*/}-${check##*/}"-*-stdout 2>/dev/null; then
+            if diff -q "${task##*/}-${check##*/}"-*-stdout 1>/dev/null; then
                 msg::color 2 '[OK]'
             else
                 msg::color 1 '[KO]'
@@ -51,9 +51,9 @@ test::all()
 test::read()
 {
     for SHELL in /bin/sh "${SHELL}"; do
-        ("${SHELL}" 0<"$1"; echo "$?") \
-            1>"$2-${SHELL##*/}-stdout" \
-            2>"$2-${SHELL##*/}-stderr"
+        ("${SHELL}" 0< "$1"; echo "$?") \
+            1> "$2-${SHELL##*/}-stdout" \
+            2> "$2-${SHELL##*/}-stderr"
     done
 }
 

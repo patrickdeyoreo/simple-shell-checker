@@ -82,7 +82,7 @@ msg::error()
 msg::color()
 {
     if [[ -t 1 ]] && tput setaf &>/dev/null; then
-        msg::std "$(tput setaf "$1")" "${@:2}$(tput sgr0)"
+        msg::std "$(tput setaf "$1")${@:2}$(tput sgr0)"
     else
         msg::std "${@:2}"
     fi

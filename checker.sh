@@ -12,7 +12,7 @@ OUTPUT_DIR=$(mktemp -d --tmpdir -- "${BASH_SOURCE##*/}-XXX")
 trap -- 'rm -rf "${OUTPUT_DIR}"' EXIT
 
 source -- "${SOURCE_DIR}"/libmsg.sh
-s
+
 source -- "${SOURCE_DIR}"/libtest.sh
 
 set +o errexit
