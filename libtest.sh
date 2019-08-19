@@ -51,9 +51,9 @@ test::all()
 test::read()
 {
     for SHELL in /bin/sh "${SHELL}"; do
-        ("${SHELL}" 0< "$1"; echo "$?") \
-            1> "$2-${SHELL##*/}-stdout" \
-            2> "$2-${SHELL##*/}-stderr"
+        { "${SHELL}" <"$1" & wait "$!"; echo "$?"; } \
+            1> >(sed 's:/bin/sh:'"${SHELL//\&/\\\&}"':g' >"$2-${SHELL##*/}-stdout") \
+            2> >(sed 's:/bin/sh:'"${SHELL//\&/\\\&}"':g' >"$2-${SHELL##*/}-stderr")
     done
 }
 
@@ -73,9 +73,9 @@ test::read()
 test::exec()
 {
     for SHELL in /bin/sh "${SHELL}"; do
-        ("${check}"; echo "$?") \
-            1>"$2-${SHELL##*/}-stdout" \
-            2>"$2-${SHELL##*/}-stderr"
+        { "${check}" & wait "$!"; echo "$?"; } \
+            1> >(sed 's:/bin/sh:'"${SHELL//&/\\&}"':g' >"$2-${SHELL##*/}-stdout") \
+            2> >(sed 's:/bin/sh:'"${SHELL//&/\\&}"':g' >"$2-${SHELL##*/}-stderr")
     done </dev/null
 }
 
