@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+#
+# Run a test suite for the Holberton shell project
+
+set -o errexit
+
+SOURCE_DIR=$(realpath -- "$(dirname -- "${BASH_SOURCE%/*}")")
+
+OUTPUT_DIR=$(mktemp -d --tmpdir -- "${BASH_SOURCE##*/}-XXX")
+
+trap -- 'rm -rf "${OUTPUT_DIR}"' EXIT
+
+source -- "${SOURCE_DIR}"/libmsg.sh
+
+set +o errexit
+
+if (( $# != 1 )); then
+    msg::error "${0##*/}" 'usage' "${BASH_SOURCE##*/} SHELL"
+    exit 1
+fi
+if ! [[ -e $1 ]]; then
+    msg::error "${0##*/}" "$1" 'No such file or directory'
+    exit 1
+fi
+if ! [[ -r $1 && -x $1 ]]; then
+    msg::error "${0##*/}" "$1" 'Permission denied'
+    exit 1
+fi
+
+SHELL=$(realpath -- "$1")
+export SHELL
+
+shopt -s nullglob
+
+cd -- "${OUTPUT_DIR}"
+
+for task in "${SOURCE_DIR}"/tasks/*; do
+    msg::std "> Task ${task##*/}:"
+    for check in "${task}"/*; do
+        msg::nonl "    # ${check##*/}"
+        if [[ -x ${check} ]]; then
+            for SHELL in /bin/sh "${SHELL}"; do
+                ("${check}" "${SHELL}"; echo "$?") 0</dev/null \
+                    1>"${task##*/}-${check##*/}-${SHELL##*/}-out" \
+                    2>"${task##*/}-${check##*/}-${SHELL##*/}-err"
+            done
+        else
+            for SHELL in /bin/sh "${SHELL}"; do
+                ("${SHELL}"; echo "$?") 0<"${check}" \
+                    1>"${task##*/}-${check##*/}-${SHELL##*/}-out" \
+                    2>"${task##*/}-${check##*/}-${SHELL##*/}-err"
+            done
+        fi
+        if diff -q "${task##*/}-${check##*/}"-*-out 2>/dev/null; then
+            msg::color 2 '[OK]'
+        else
+            msg::color 1 '[KO]'
+        fi
+    done
+done
+
+
+# vi:et:ft=sh:sts=4:sw=4
