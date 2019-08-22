@@ -17,22 +17,32 @@
 test::all()
 {
     shopt -s nullglob
-    for task in "$1"/*; do
-        msg::std "> Task ${task##*/}:"
-        for check in "${task}"/*; do
-            msg::std "    # ${check##*/}: "
-            if [[ -x ${check} ]]; then
+
+    for task in "$1"/*
+    do
+        msg::std "* Task ${task##*/}:"
+
+        for check in "${task}"/*
+        do
+            msg::nonl "  ${check##*/}: "
+
+            if [[ -x ${check} ]]
+            then
                 test::exec "${check}" "${task##*/}-${check##*/}"
             else
                 test::read "${check}" "${task##*/}-${check##*/}"
             fi
-            if diff -bB "${task##*/}-${check##*/}"-*-stdout; then
+
+            if wait "$!"
+            then
                 msg::color 2 '[OK]'
             else
                 msg::color 1 '[KO]'
-            fi
+                cat
+            fi < <(diff -bB -y -W "$(( "$(tput cols)" / 2 ))" "${task##*/}-${check##*/}"-*-stdout)
         done
     done
+
     shopt -u nullglob
 }
 
@@ -51,9 +61,12 @@ test::all()
 #######################################
 test::read()
 {
-    for SHELL in /bin/sh "${SHELL}"; do
-        { "${SHELL}" <"$1" & wait "$!"; } \
-            1> >(sed 's:/bin/sh:'"${SHELL//\&/\\\&}"':g' >"$2-${SHELL##*/}-stdout") \
+    for SHELL in /bin/sh "${SHELL}"
+    do
+        {   "${SHELL}" <"$1" &
+            wait "$!"
+            echo "EXIT STATUS: $?"
+        }   1> >(sed 's:/bin/sh:'"${SHELL//\&/\\\&}"':g' >"$2-${SHELL##*/}-stdout") \
             2> >(sed 's:/bin/sh:'"${SHELL//\&/\\\&}"':g' >"$2-${SHELL##*/}-stderr")
     done
 }
@@ -73,9 +86,12 @@ test::read()
 #######################################
 test::exec()
 {
-    for SHELL in /bin/sh "${SHELL}"; do
-        { "$1" "${SHELL}" & wait "$!"; } \
-            1> >(sed 's:/bin/sh:'"${SHELL//&/\\&}"':g' >"$2-${SHELL##*/}-stdout") \
+    for SHELL in /bin/sh "${SHELL}"
+    do
+        {   "$1" "${SHELL}" &
+            wait "$!"
+            echo "EXIT STATUS: $?"
+        }   1> >(sed 's:/bin/sh:'"${SHELL//&/\\&}"':g' >"$2-${SHELL##*/}-stdout") \
             2> >(sed 's:/bin/sh:'"${SHELL//&/\\&}"':g' >"$2-${SHELL##*/}-stderr")
     done </dev/null
 }
