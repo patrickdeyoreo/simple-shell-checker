@@ -20,19 +20,20 @@ test::all()
     for task in "$1"/*; do
         msg::std "> Task ${task##*/}:"
         for check in "${task}"/*; do
-            msg::nonl "    # ${check##*/}: "
+            msg::std "    # ${check##*/}: "
             if [[ -x ${check} ]]; then
                 test::exec "${check}" "${task##*/}-${check##*/}"
             else
                 test::read "${check}" "${task##*/}-${check##*/}"
             fi
-            if diff -q "${task##*/}-${check##*/}"-*-stdout 1>/dev/null; then
+            if diff -bB "${task##*/}-${check##*/}"-*-stdout; then
                 msg::color 2 '[OK]'
             else
                 msg::color 1 '[KO]'
             fi
         done
     done
+    shopt -u nullglob
 }
 
 
@@ -51,7 +52,7 @@ test::all()
 test::read()
 {
     for SHELL in /bin/sh "${SHELL}"; do
-        { "${SHELL}" <"$1" & wait "$!"; echo "$?"; } \
+        { "${SHELL}" <"$1" & wait "$!"; } \
             1> >(sed 's:/bin/sh:'"${SHELL//\&/\\\&}"':g' >"$2-${SHELL##*/}-stdout") \
             2> >(sed 's:/bin/sh:'"${SHELL//\&/\\\&}"':g' >"$2-${SHELL##*/}-stderr")
     done
@@ -73,7 +74,7 @@ test::read()
 test::exec()
 {
     for SHELL in /bin/sh "${SHELL}"; do
-        { "$1" "${SHELL}" & wait "$!"; echo "$?"; } \
+        { "$1" "${SHELL}" & wait "$!"; } \
             1> >(sed 's:/bin/sh:'"${SHELL//&/\\&}"':g' >"$2-${SHELL##*/}-stdout") \
             2> >(sed 's:/bin/sh:'"${SHELL//&/\\&}"':g' >"$2-${SHELL##*/}-stderr")
     done </dev/null
