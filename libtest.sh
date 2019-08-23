@@ -66,8 +66,8 @@ test::read()
         {   "${SHELL}" <"$1" &
             wait "$!"
             echo "EXIT STATUS: $?"
-        }   1> >(sed 's:/bin/sh:'"${SHELL//\&/\\\&}"':g' >"$2-${SHELL##*/}-stdout") \
-            2> >(sed 's:/bin/sh:'"${SHELL//\&/\\\&}"':g' >"$2-${SHELL##*/}-stderr")
+        }   1> >(sed 's:/bin/sh:'"${SHELL//&/\\&}"':g' >"$2-${SHELL##*/}-stdout") \
+            2> >(sed 's:/bin/sh:'"${SHELL//&/\\&}"':g' >"$2-${SHELL##*/}-stderr")
     done
 }
 
