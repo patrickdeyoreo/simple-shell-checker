@@ -5,7 +5,7 @@
 
 set -o errexit
 
-SOURCE_DIR=$(realpath -- "$(dirname -- "${BASH_SOURCE%/*}")")
+SOURCE_DIR=$(CDPATH= cd -- "${BASH_SOURCE%/*}" && pwd -P)
 
 OUTPUT_DIR=$(mktemp -d --tmpdir -- "${BASH_SOURCE##*/}-XXX")
 
@@ -32,7 +32,7 @@ if ! [[ -r $1 && -x $1 ]]; then
 fi
 
 
-SHELL=$(realpath -- "$1")
+SHELL=$(CDPATH= cd -- "${1%/*}" && pwd -P -- )
 
 cd -- "${OUTPUT_DIR}"
 
