@@ -69,12 +69,12 @@ fi
 
 if ! [[ -e ${SHELL} ]]
 then
-    msg::error "${0##*/}" "$1" 'No such file or directory'
+    msg::error "${0##*/}" "${SHELL}" 'No such file or directory'
     exit 1
 fi
 if ! [[ -r ${SHELL} && -x ${SHELL} ]]
 then
-    msg::error "${0##*/}" "$1" 'Permission denied'
+    msg::error "${0##*/}" "${SHELL}" 'Permission denied'
     exit 1
 fi
 
