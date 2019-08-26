@@ -7,9 +7,9 @@ set -o errexit
 
 USAGE="${BASH_SOURCE##*/} [-r REPO] [SHELL]"
 
-SOURCE_DIR=$(CDPATH='' cd -- "${BASH_SOURCE%/*}" && pwd -P)
+SOURCE_DIR="$(CDPATH='' cd -- "${BASH_SOURCE%/*}" && pwd -P)"
 
-OUTPUT_DIR=$(mktemp -d --tmpdir -- "${BASH_SOURCE##*/}-XXX")
+OUTPUT_DIR="$(mktemp -d --tmpdir -- "${BASH_SOURCE##*/}-XXX")"
 
 trap -- 'rm -rf "${OUTPUT_DIR}"' EXIT
 
@@ -25,7 +25,7 @@ OPTIND=1
 
 while getopts ":r:h" option; do
     case "${option}" in
-        r ) export REPO="${OPTARG}"
+        r ) REPO="${OPTARG}"
             ;;
         h ) msg::std "${0##*/}" 'usage' "${USAGE}"
             exit 2
@@ -79,7 +79,7 @@ then
 fi
 
 
-test::all "${SOURCE_DIR}/tasks"
+SHELL="${SHELL}" REPO="${REPO}" test::all "${SOURCE_DIR}/tasks"
 
 
 # vi:et:ft=sh:sts=4:sw=4
