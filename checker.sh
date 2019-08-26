@@ -63,7 +63,7 @@ fi
 
 if ! [[ -n ${SHELL} ]]
 then
-    msg::error "${0##*/}" 'SHELL' "specify in 'config.sh' or use '-s'"
+    msg::error "${0##*/}" 'SHELL' "supply as argument or specify in 'config.sh'"
     exit 1
 fi
 
