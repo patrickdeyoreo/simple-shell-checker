@@ -1,6 +1,19 @@
 #!/usr/bin/env bash
 #
-# Test function library
+# Shell tests function library
+
+# Include guard
+if (( __libtest__ ))
+then
+  [[ $0 != "${BASH_SOURCE}" ]] && return 0 || exit 0
+fi
+__libtest__=1
+
+
+if ! source "${BASH_SOURCE%/*}/libmsg.sh"
+then
+  [[ $0 != "${BASH_SOURCE}" ]] && return 1 || exit 1
+fi
 
 
 #######################################
@@ -8,7 +21,9 @@
 # Usage:
 #   test::all TASK_DIR
 # Globals:
+#   OUTPUT_DIR
 #   SHELL
+#   SHELL_PROMPT
 # Arguments:
 #   TASK_DIR: task directory root
 # Return:
@@ -16,21 +31,25 @@
 #######################################
 test::all()
 {
+    local output_prefix
+
     shopt -s nullglob
 
     for task in "$1"/*
     do
-        msg::std "* Task ${task##*/}:"
+        msg::std "* $(tput bold)Task ${task##*/}$(tput sgr0):"
 
         for check in "${task}"/*
         do
-            msg::nonl "  ${check##*/}: "
+            output_prefix="${OUTPUT_DIR}/${task##*/}-${check##*/}"
+
+            msg::nonl "    # $(tput sitm)${check##*/}$(tput sgr0):"$'\t'
 
             if [[ -x ${check} ]]
             then
-                test::exec "${check}" "${task##*/}-${check##*/}"
+                test::exec "${check}" "${output_prefix}"
             else
-                test::read "${check}" "${task##*/}-${check##*/}"
+                test::read "${check}" "${output_prefix}"
             fi
 
             if wait "$!"
@@ -39,7 +58,7 @@ test::all()
             else
                 msg::color 1 '[KO]'
                 cat
-            fi < <(diff -bB -y -W "$(( "$(tput cols)" / 2 ))" "${task##*/}-${check##*/}"-*-stdout)
+            fi < <(diff "${DIFF_OPTS[@]}" "${output_prefix}"-?-out)
         done
     done
 
@@ -53,6 +72,7 @@ test::all()
 #   test::read TEST NAME_TEMPLATE
 # Globals:
 #   SHELL
+#   SHELL_REFERENCE
 # Arguments:
 #   TEST: the test to run
 #   NAME_TEMPLATE: output filename prefix
@@ -61,14 +81,19 @@ test::all()
 #######################################
 test::read()
 {
+    local i=0
+    local shell_esc="${SHELL//\\/\\\\}"
+    shell_esc="${shell_esc//&/\\&}"
+    shell_esc="${shell_esc//@/\\@}"
+
     for SHELL in /bin/sh "${SHELL}"
     do
         {   "${SHELL}" <"$1" &
             wait "$!"
-            echo "EXIT STATUS: $?"
-        }   1> >(sed 's:/bin/sh:'"${SHELL//&/\\&}"':g' >"$2-${SHELL##*/}-stdout") \
-            2> >(sed 's:/bin/sh:'"${SHELL//&/\\&}"':g' >"$2-${SHELL##*/}-stderr")
+            echo "Exit Status: $?"
+        }   &> "$2-$((i++))-out"
     done
+    sed -i 's@\</bin/sh:@'"${shell_esc}"'@g' "$2"-?-out
 }
 
 
@@ -86,14 +111,19 @@ test::read()
 #######################################
 test::exec()
 {
+    local i=0
+    local shell_esc="${SHELL//\\/\\\\}"
+    shell_esc="${shell_esc//&/\\&}"
+    shell_esc="${shell_esc//@/\\@}"
+
     for SHELL in /bin/sh "${SHELL}"
     do
         {   "$1" "${SHELL}" &
             wait "$!"
-            echo "EXIT STATUS: $?"
-        }   1> >(sed 's:/bin/sh:'"${SHELL//&/\\&}"':g' >"$2-${SHELL##*/}-stdout") \
-            2> >(sed 's:/bin/sh:'"${SHELL//&/\\&}"':g' >"$2-${SHELL##*/}-stderr")
-    done </dev/null
+            echo "Exit Status: $?"
+        }   &> "$2-$((i++))-out"
+    done
+    sed -i 's@\</bin/sh:@'"${shell_esc}"'@g' "$2"-?-out
 }
 
 

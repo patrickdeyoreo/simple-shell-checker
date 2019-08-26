@@ -2,6 +2,13 @@
 #
 # Message formatting library
 
+# Include guard
+if (( __libmsg__ ))
+then
+  [[ $0 != "${BASH_SOURCE}" ]] && return 0 || exit 0
+fi
+__libmsg__=1
+
 
 #######################################
 # Print a formatted message (no newline)
@@ -25,7 +32,6 @@ msg::nonl()
         fi
         printf '%s' "${!#}"
     fi
-
     return "${last_exit_status}"
 }
 
@@ -49,7 +55,7 @@ msg::std()
 
 
 #######################################
-# Print a formatted message to stderr
+# Print a formatted message to stderr (nonl)
 # Usage:
 #   msg::error [CONTEXT ...] MESSAGE
 # Globals:
@@ -62,8 +68,26 @@ msg::std()
 #######################################
 msg::error()
 {
-    msg::std "$@"
-} 1>&2
+    msg::std "$@" 1>&2
+}
+
+
+#######################################
+# Print a formatted message to stderr
+# Usage:
+#   msg::error_nonl [CONTEXT ...] MESSAGE
+# Globals:
+#   None
+# Arguments:
+#   CONTEXT: program(s), function(s), or value(s) to prepend
+#   MESSAGE: message to print
+# Return:
+#   exit status of the previous command
+#######################################
+msg::error_nonl()
+{
+    msg::nonl "$@" 1>&2
+}
 
 
 #######################################
@@ -82,9 +106,32 @@ msg::error()
 msg::color()
 {
     if [[ -t 1 ]] && tput setaf &>/dev/null; then
-        msg::std "$(tput setaf "$1")${@:2}$(tput sgr0)"
+        msg::std "$(tput setaf "$(($1))")${@:2}$(tput sgr0)"
     else
         msg::std "${@:2}"
+    fi
+}
+
+
+#######################################
+# Print a colored message to stdout (no newline)
+# Usage:
+#   msg::color_nonl COLOR [CONTEXT ...] MESSAGE
+# Globals:
+#   None
+# Arguments:
+#   COLOR: color number
+#   CONTEXT: program(s), function(s), or value(s) to prepend
+#   MESSAGE: message to print
+# Return:
+#   exit status of the previous command
+#######################################
+msg::color_nonl()
+{
+    if [[ -t 1 ]] && tput setaf &>/dev/null; then
+        msg::nonl "$(tput setaf "$(($1))")${@:2}$(tput sgr0)"
+    else
+        msg::nonl "${@:2}"
     fi
 }
 
