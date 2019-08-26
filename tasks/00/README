@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+[[ -d ${REPO} ]] && [[ -f ${REPO}/README.md ]] && exit 0
+
+echo "Missing 'README.md'"
+
+exit 1

@@ -2,10 +2,10 @@
 #
 # Message formatting library
 
-# Include guard
+
 if (( __libmsg__ ))
 then
-  [[ $0 != "${BASH_SOURCE}" ]] && return 0 || exit 0
+  [[ $0 != "${BASH_SOURCE[0]}" ]] && return 0 || exit 0
 fi
 __libmsg__=1
 

@@ -2,18 +2,12 @@
 #
 # Shell tests function library
 
-# Include guard
+
 if (( __libtest__ ))
 then
-  [[ $0 != "${BASH_SOURCE}" ]] && return 0 || exit 0
+    [[ $0 != "${BASH_SOURCE}" ]] && return 0 || exit 0
 fi
 __libtest__=1
-
-
-if ! source "${BASH_SOURCE%/*}/libmsg.sh"
-then
-  [[ $0 != "${BASH_SOURCE}" ]] && return 1 || exit 1
-fi
 
 
 #######################################
@@ -31,37 +25,53 @@ fi
 #######################################
 test::all()
 {
-    local output_prefix
+    local task check prefix
 
     shopt -s nullglob
 
     for task in "$1"/*
     do
-        msg::std "$(tput smul)> $(tput bold)Task ${task##*/}$(tput sgr0):"
+        msg::std "$(tput smul)$(tput bold)> Task ${task##*/}$(tput sgr0):"
 
         for check in "${task}"/*
         do
-            output_prefix="${OUTPUT_DIR}/${task##*/}-${check##*/}"
-
-            printf '%-20s' "  * ${check##*/}: "
+            prefix="${OUTPUT_DIR}/${task##*/}-${check##*/}"
 
             if [[ -x ${check} ]]
             then
-                test::exec "${check}" "${output_prefix}"
+                if wait "$!"
+                then
+                    msg::nonl '['
+                    msg::color_nonl 2 'OK'
+                    msg::nonl ']'
+                    msg::std " ${check##*/}"
+                else
+                    msg::nonl '['
+                    msg::color_nonl 1 'KO'
+                    msg::nonl ']'
+                    msg::std " ${check##*/}"
+                    tput dim
+                    sed 's/^/     /g'
+                    tput sgr0
+                fi < <("${check}")
             else
-                test::read "${check}" "${output_prefix}"
+                test::read "${check}" "${prefix}"
+                if wait "$!"
+                then
+                    msg::nonl '['
+                    msg::color_nonl 2 'OK'
+                    msg::nonl ']'
+                    msg::std " ${check##*/}"
+                else
+                    msg::nonl '['
+                    msg::color_nonl 1 'KO'
+                    msg::nonl ']'
+                    msg::std " ${check##*/}"
+                    tput dim
+                    sed 's/^/     /g'
+                    tput sgr0
+                fi < <(diff "${DIFF_OPTS[@]}" "${prefix}"-?-out)
             fi
-
-            if wait "$!"
-            then
-                msg::color 2 '[OK]'
-            else
-                msg::color 1 '[KO]'
-                tput dim
-                tput sitm
-                sed 's/^/    /g'
-                tput sgr0
-            fi < <(diff --color=always "${DIFF_OPTS[@]}" "${output_prefix}"-?-out)
         done
     done
 
@@ -78,7 +88,7 @@ test::all()
 #   SHELL_REFERENCE
 # Arguments:
 #   TEST: the test to run
-#   NAME_TEMPLATE: output filename prefix
+#   NAME_TEMPLATE: output filename out_prefix
 # Return:
 #   None
 #######################################
@@ -87,7 +97,6 @@ test::read()
     local i=0
     local shell_esc="${SHELL//\\/\\\\}"
     shell_esc="${shell_esc//&/\\&}"
-    shell_esc="${shell_esc//@/\\@}"
 
     for SHELL in /bin/sh "${SHELL}"
     do
@@ -96,7 +105,7 @@ test::read()
             echo "Exit Status: $?"
         }   &> "$2-$((i++))-out"
     done
-    sed -i 's@\</bin/sh:@'"${shell_esc}"'@g' "$2"-?-out
+    sed -i 's@/bin/sh@'"${shell_esc//@/\\@}"'@g' "$2"-?-out
 }
 
 
@@ -108,26 +117,13 @@ test::read()
 #   SHELL
 # Arguments:
 #   TEST: the test to run
-#   NAME_TEMPLATE: output filename prefix
+#   NAME_TEMPLATE: output filename out_prefix
 # Return:
 #   None
 #######################################
-test::exec()
-{
-    local i=0
-    local shell_esc="${SHELL//\\/\\\\}"
-    shell_esc="${shell_esc//&/\\&}"
-    shell_esc="${shell_esc//@/\\@}"
-
-    for SHELL in /bin/sh "${SHELL}"
-    do
-        {   "$1" "${SHELL}" &
-            wait "$!"
-            echo "Exit Status: $?"
-        }   &> "$2-$((i++))-out"
-    done
-    sed -i 's@\</bin/sh:@'"${shell_esc}"'@g' "$2"-?-out
-}
+#test::exec()
+#{
+#}
 
 
 # vi:et:ft=sh:sts=4:sw=4

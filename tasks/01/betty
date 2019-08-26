@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+[[ -d ${REPO} ]] && betty "${REPO}"/*.[ch] &>/dev/null

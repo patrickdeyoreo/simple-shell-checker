@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+(( $(ltrace -e strtok "${SHELL}" </dev/null |& wc -l) == 1 )) 2>/dev/null

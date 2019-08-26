@@ -5,9 +5,9 @@
 
 set -o errexit
 
-USAGE="${BASH_SOURCE##*/} [-r REPO] [-s SHELL]"
+USAGE="${BASH_SOURCE##*/} [-r REPO] [SHELL]"
 
-SOURCE_DIR=$(CDPATH= cd -- "${BASH_SOURCE%/*}" && pwd -P)
+SOURCE_DIR=$(CDPATH='' cd -- "${BASH_SOURCE%/*}" && pwd -P)
 
 OUTPUT_DIR=$(mktemp -d --tmpdir -- "${BASH_SOURCE##*/}-XXX")
 
@@ -18,46 +18,52 @@ source -- "${SOURCE_DIR}/config.sh"
 
 source -- "${SOURCE_DIR}/libmsg.sh"
 
-source -- "${SOURCE_DIR}/libref.sh"
-
 source -- "${SOURCE_DIR}/libtest.sh"
 
 
-declare -A opts=( )
+OPTIND=1
 
-ref::getopts opts 'r:s:h' "$@"
+while getopts ":r:h" option; do
+    case "${option}" in
+        r ) export REPO="${OPTARG}"
+            ;;
+        h ) msg::std "${0##*/}" 'usage' "${USAGE}"
+            exit 2
+            ;;
+        : ) msg::error "${0##*/}" "${OPTARG}" 'option requires an argument'
+            exit 2
+            ;;
+        \?) msg::error "${0##*/}" "${OPTARG}" 'invalid option'
+            exit 2
+            ;;
+    esac
+done
 
 shift "$((OPTIND - 1))"
 
-
-if [[ -n ${opts[r]+_} ]]
+if (( $# ))
 then
-    REPO="${opts[r]}"
-fi
-
-if [[ -n ${opts[s]+_} ]]
-then
-    SHELL="${opts[s]}"
-fi
-
-if [[ -n ${opts[h]+_} ]]
-then
-    msg::std "${0##*/}" 'usage' "${USAGE}"
-    exit 2
+    SHELL="$1"
 fi
 
 set +o errexit
 
 
-if (( $# ))
+if (( $# > 1 ))
 then
     msg::error "${0##*/}" 'too many arguments'
     exit 1
 fi
 
+if [[ -n ${REPO} && ! -d ${REPO} ]]
+then
+    msg::error "${0##*/}" 'REPO' "${REPO}" 'No such directory'
+    exit 1
+fi
+
 if ! [[ -n ${SHELL} ]]
 then
-    msg::error "${0##*/}" 'SHELL' 'must be non-null'
+    msg::error "${0##*/}" 'SHELL' "specify in 'config.sh' or use '-s'"
     exit 1
 fi
 
@@ -66,7 +72,6 @@ then
     msg::error "${0##*/}" "$1" 'No such file or directory'
     exit 1
 fi
-
 if ! [[ -r ${SHELL} && -x ${SHELL} ]]
 then
     msg::error "${0##*/}" "$1" 'Permission denied'
