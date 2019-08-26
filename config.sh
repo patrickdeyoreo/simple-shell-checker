@@ -3,4 +3,4 @@
 # Checker configuration file
 
 SHELL=
-DIFF_OPTS=( -b -B -y )
+DIFF_OPTS=( '-b' '--changed-group-format=%<' '--unchanged-group-format=%<' )

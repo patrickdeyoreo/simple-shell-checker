@@ -37,13 +37,13 @@ test::all()
 
     for task in "$1"/*
     do
-        msg::std "* $(tput bold)Task ${task##*/}$(tput sgr0):"
+        msg::std "$(tput smul)> $(tput bold)Task ${task##*/}$(tput sgr0):"
 
         for check in "${task}"/*
         do
             output_prefix="${OUTPUT_DIR}/${task##*/}-${check##*/}"
 
-            msg::nonl "    # $(tput sitm)${check##*/}$(tput sgr0):"$'\t'
+            printf '%-20s' "  * ${check##*/}: "
 
             if [[ -x ${check} ]]
             then
@@ -57,8 +57,11 @@ test::all()
                 msg::color 2 '[OK]'
             else
                 msg::color 1 '[KO]'
-                cat
-            fi < <(diff "${DIFF_OPTS[@]}" "${output_prefix}"-?-out)
+                tput dim
+                tput sitm
+                sed 's/^/    /g'
+                tput sgr0
+            fi < <(diff --color=always "${DIFF_OPTS[@]}" "${output_prefix}"-?-out)
         done
     done
 
