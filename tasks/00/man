@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-[[ -d ${REPO} ]] && [[ -f ${REPO}/man_1_simple_shell ]] && exit 0
-
-echo "Missing 'man_1_simple_shell'"
-
-exit 1

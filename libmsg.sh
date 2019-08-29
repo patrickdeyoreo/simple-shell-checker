@@ -11,7 +11,7 @@ __libmsg__=1
 
 
 #######################################
-# Print a formatted message (no newline)
+# Print a formatted message to standard output (no newline)
 # Usage:
 #   msg::nonl [CONTEXT ...] MESSAGE
 # Globals:
@@ -20,24 +20,21 @@ __libmsg__=1
 #   CONTEXT: program(s), function(s), or value(s) to prepend
 #   MESSAGE: message to print
 # Return:
-#   exit status of the previous command
+#   None
 #######################################
 msg::nonl()
 {
-    local last_exit_status="$?"
-
     if (( $# > 0 )); then
         if (( $# > 1 )); then
             printf '%s: ' "${@:1:($# - 1)}"
         fi
         printf '%s' "${!#}"
     fi
-    return "${last_exit_status}"
 }
 
 
 #######################################
-# Print a formatted message to stdout
+# Print a formatted message to standard output
 # Usage:
 #   msg::std [CONTEXT ...] MESSAGE
 # Globals:
@@ -46,7 +43,7 @@ msg::nonl()
 #   CONTEXT: program(s), function(s), or value(s) to prepend
 #   MESSAGE: message to print
 # Return:
-#   exit status of the previous command
+#   None
 #######################################
 msg::std()
 {
@@ -55,36 +52,36 @@ msg::std()
 
 
 #######################################
-# Print a formatted message to stderr (nonl)
+# Print a formatted message to standard error
 # Usage:
-#   msg::error [CONTEXT ...] MESSAGE
+#   msg::err [CONTEXT ...] MESSAGE
 # Globals:
 #   None
 # Arguments:
 #   CONTEXT: program(s), function(s), or value(s) to prepend
 #   MESSAGE: message to print
 # Return:
-#   exit status of the previous command
+#   None
 #######################################
-msg::error()
+msg::err()
 {
     msg::std "$@" 1>&2
 }
 
 
 #######################################
-# Print a formatted message to stderr
+# Print a formatted message to standard error (no newline)
 # Usage:
-#   msg::error_nonl [CONTEXT ...] MESSAGE
+#   msg::err_nonl [CONTEXT ...] MESSAGE
 # Globals:
 #   None
 # Arguments:
 #   CONTEXT: program(s), function(s), or value(s) to prepend
 #   MESSAGE: message to print
 # Return:
-#   exit status of the previous command
+#   None
 #######################################
-msg::error_nonl()
+msg::err_nonl()
 {
     msg::nonl "$@" 1>&2
 }
@@ -101,11 +98,12 @@ msg::error_nonl()
 #   CONTEXT: program(s), function(s), or value(s) to prepend
 #   MESSAGE: message to print
 # Return:
-#   exit status of the previous command
+#   None
 #######################################
 msg::color()
 {
-    if [[ -t 1 ]] && tput setaf &>/dev/null; then
+    if [[ -t 1 ]] && tput setaf &>/dev/null
+    then
         msg::std "$(tput setaf "$(($1))")${@:2}$(tput sgr0)"
     else
         msg::std "${@:2}"
@@ -124,11 +122,12 @@ msg::color()
 #   CONTEXT: program(s), function(s), or value(s) to prepend
 #   MESSAGE: message to print
 # Return:
-#   exit status of the previous command
+#   None
 #######################################
 msg::color_nonl()
 {
-    if [[ -t 1 ]] && tput setaf &>/dev/null; then
+    if [[ -t 1 ]] && tput setaf &>/dev/null
+    then
         msg::nonl "$(tput setaf "$(($1))")${@:2}$(tput sgr0)"
     else
         msg::nonl "${@:2}"

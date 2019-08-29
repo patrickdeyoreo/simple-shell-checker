@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-[[ -d ${REPO} ]] && [[ -f ${REPO}/AUTHORS ]] && exit 0
-
-echo "Missing 'AUTHORS'"
-
-exit 1

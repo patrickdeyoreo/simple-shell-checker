@@ -2,10 +2,9 @@
 #
 # Checker configuration file
 
-REPO=
 SHELL=
 DIFF_OPTS=(
-  '-b'
-  '--changed-group-format=%<'
-  '--unchanged-group-format=%<'
+'-b'
+'--changed-group-format=%<'
+'--unchanged-group-format=%<'
 )
